@@ -1,0 +1,54 @@
+{
+  "nodes": [
+    {
+      "id": "ML-001",
+      "name": "监督学习",
+      "category": "机器学习",
+      "difficulty": "中级",
+      "description": "通过标注数据训练模型",
+      "doc_path": "/docs/supervised.md",
+      "video_url": "https://example.com/video1.mp4",
+      "quiz_path": "/quiz/ml_001.pdf"
+    },
+    {
+      "id": "ML-002",
+      "name": "神经网络",
+      "category": "深度学习",
+      "difficulty": "高级",
+      "description": "模拟人脑结构的算法",
+      "doc_path": "/docs/neural_network.md",
+      "video_url": "https://example.com/video2.mp4",
+      "quiz_path": "/quiz/nn_basic.pdf"
+    },
+    {
+      "id": "DL-001",
+      "name": "深度学习",
+      "category": "深度学习",
+      "difficulty": "高级",
+      "description": "基于神经网络的机器学习方法",
+      "doc_path": "/docs/deep_learning.md",
+      "video_url": "",
+      "quiz_path": "/quiz/dl_intro.pdf"
+    }
+  ],
+  "links": [
+    {
+      "source": "ML-001",
+      "target": "ML-002",
+      "type": "先修",
+      "weight": 0.8
+    },
+    {
+      "source": "ML-002",
+      "target": "DL-001",
+      "type": "属于",
+      "weight": 1.0
+    },
+    {
+      "source": "ML-002",
+      "target": "ML-001",
+      "type": "相关",
+      "weight": 0.5
+    }
+  ]
+}

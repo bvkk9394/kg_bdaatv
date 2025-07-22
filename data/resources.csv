@@ -1,0 +1,4 @@
+resource_id,concept_id,type,title,path,file_type,file_size
+RES-001,ML-001,video,监督学习入门,/assets/videos/supervised.mp4,mp4,张教授
+RES-002,ML-001,doc,第一章测试题,/assets/docs/supervised.pdf,pdf,教学组
+RES-003,ML-002,video,神经网络基础,/assets/videos/supervised.mp4,mp4,李教授

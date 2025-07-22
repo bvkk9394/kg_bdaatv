@@ -1,0 +1,4 @@
+concept_id,name,category,difficulty,description,doc_path,video_url,quiz_path
+ML-001,监督学习,机器学习,中级,通过标注数据训练模型,/docs/supervised.md,https://example.com/video1.mp4,/quiz/ml_001.pdf
+ML-002,神经网络,深度学习,高级,模拟人脑结构的算法,/docs/neural_network.md,https://example.com/video2.mp4,/quiz/nn_basic.pdf
+DL-001,深度学习,深度学习,高级,基于神经网络的机器学习方法,/docs/deep_learning.md,,/quiz/dl_intro.pdf

@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2025-07-21">
+    <creator>NetworkX 3.5</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="">
+    <attributes mode="static" class="edge">
+      <attribute id="8" title="relation_type" type="string" />
+    </attributes>
+    <attributes mode="static" class="node">
+      <attribute id="0" title="concept_id" type="string" />
+      <attribute id="1" title="name" type="string" />
+      <attribute id="2" title="category" type="string" />
+      <attribute id="3" title="difficulty" type="string" />
+      <attribute id="4" title="description" type="string" />
+      <attribute id="5" title="doc_path" type="string" />
+      <attribute id="6" title="video_url" type="string" />
+      <attribute id="7" title="quiz_path" type="string" />
+    </attributes>
+    <nodes>
+      <node id="ML-001" label="ML-001">
+        <attvalues>
+          <attvalue for="0" value="ML-001" />
+          <attvalue for="1" value="监督学习" />
+          <attvalue for="2" value="机器学习" />
+          <attvalue for="3" value="中级" />
+          <attvalue for="4" value="通过标注数据训练模型" />
+          <attvalue for="5" value="/docs/supervised.md" />
+          <attvalue for="6" value="https://example.com/video1.mp4" />
+          <attvalue for="7" value="/quiz/ml_001.pdf" />
+        </attvalues>
+      </node>
+      <node id="ML-002" label="ML-002">
+        <attvalues>
+          <attvalue for="0" value="ML-002" />
+          <attvalue for="1" value="神经网络" />
+          <attvalue for="2" value="深度学习" />
+          <attvalue for="3" value="高级" />
+          <attvalue for="4" value="模拟人脑结构的算法" />
+          <attvalue for="5" value="/docs/neural_network.md" />
+          <attvalue for="6" value="https://example.com/video2.mp4" />
+          <attvalue for="7" value="/quiz/nn_basic.pdf" />
+        </attvalues>
+      </node>
+      <node id="DL-001" label="DL-001">
+        <attvalues>
+          <attvalue for="0" value="DL-001" />
+          <attvalue for="1" value="深度学习" />
+          <attvalue for="2" value="深度学习" />
+          <attvalue for="3" value="高级" />
+          <attvalue for="4" value="基于神经网络的机器学习方法" />
+          <attvalue for="5" value="/docs/deep_learning.md" />
+          <attvalue for="7" value="/quiz/dl_intro.pdf" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="ML-001" target="ML-002" id="0" weight="0.8">
+        <attvalues>
+          <attvalue for="8" value="先修" />
+        </attvalues>
+      </edge>
+      <edge source="ML-002" target="DL-001" id="1" weight="1.0">
+        <attvalues>
+          <attvalue for="8" value="属于" />
+        </attvalues>
+      </edge>
+      <edge source="ML-002" target="ML-001" id="2" weight="0.5">
+        <attvalues>
+          <attvalue for="8" value="相关" />
+        </attvalues>
+      </edge>
+    </edges>
+  </graph>
+</gexf>

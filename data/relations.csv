@@ -1,0 +1,4 @@
+"relation_id","source_id","target_id","relation_type","weight","direction"
+"REL-001","ML-001","ML-002","先修",0.8,"unidirectional"
+"REL-002","ML-002","DL-001","属于",1.0,"bidirectional"
+"REL-003","ML-002","ML-001","相关",0.5,"bidirectional"
