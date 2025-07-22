@@ -4,7 +4,7 @@
       "resource_id": "RES-001",
       "type": "video",
       "title": "监督学习入门",
-      "path": "/kg_bdaatv/assets/videos/supervised.mp4",
+      "path": "assets/videos/supervised.mp4",
       "file_type": "mp4",
       "file_size": "张教授"
     },
@@ -12,7 +12,7 @@
       "resource_id": "RES-002",
       "type": "doc",
       "title": "第一章测试题",
-      "path": "/kg_bdaatv/assets/docs/supervised.pdf",
+      "path": "assets/docs/supervised.pdf",
       "file_type": "pdf",
       "file_size": "教学组"
     }
@@ -22,7 +22,7 @@
       "resource_id": "RES-003",
       "type": "video",
       "title": "神经网络基础",
-      "path": "/kg_bdaatv/assets/videos/supervised.mp4",
+      "path": "assets/videos/supervised.mp4",
       "file_type": "mp4",
       "file_size": "李教授"
     }

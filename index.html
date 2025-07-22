@@ -6,7 +6,6 @@
     <title>知识图谱可视化</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        /* 优化字体回退链，确保跨平台兼容 */
         body { 
             font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans CN", system-ui, -apple-system, Arial, sans-serif; 
             margin: 0; 
@@ -20,8 +19,8 @@
         .node text { 
             font-size: 12px; 
             pointer-events: none; 
-            font-family: inherit; /* 继承父级字体设置 */
-            text-rendering: optimizeLegibility; /* 优化文本渲染 */
+            font-family: inherit;
+            text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
         }
         .panel-item { margin-bottom: 15px; padding: 10px; background: #f5f5f5; }
@@ -62,9 +61,21 @@
             z-index: 999;
             display: none;
         }
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+        }
     </style>
 </head>
 <body>
+    <div id="loading">正在加载数据...</div>
     <div id="container">
         <svg id="graph" width="100%" height="100%"></svg>
         <div id="panel">
@@ -77,7 +88,6 @@
         </div>
     </div>
 
-    <!-- 资源弹窗 -->
     <div class="overlay" id="overlay"></div>
     <div id="resource-window">
         <button id="close-resource">× 关闭</button>
@@ -86,6 +96,12 @@
     </div>
 
     <script>
+        // ================= 动态路径配置 =================
+        const isLocal = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+        const basePath = isLocal ? '' : '/kg_bdaatv';
+        console.log(`运行环境: ${isLocal ? '本地开发' : '生产环境'}, 基础路径: ${basePath || '/'}`);
+
         // 配置参数
         const config = {
             nodeRadius: 10,
@@ -93,42 +109,44 @@
             chargeStrength: -200
         };
 
-        // 加载数据（确保JSON文件为UTF-8编码）
+        // 加载数据（使用动态路径）
         Promise.all([
-            d3.json("/kg_bdaatv/data/graph.json").then(data => {
-                // 强制处理编码问题（如果服务器未正确设置Content-Type）
+            d3.json(`${basePath}/data/graph.json`).then(data => {
+                console.log('graph.json 加载成功');
                 if (typeof data === 'string') {
                     try {
                         data = JSON.parse(data);
                     } catch (e) {
-                        console.error("JSON解析失败，可能是编码问题", e);
-                        throw new Error("数据格式错误");
+                        throw new Error(`graph.json 解析失败: ${e.message}`);
                     }
                 }
                 return data;
+            }).catch(err => {
+                console.error('graph.json 加载失败:', err);
+                throw new Error(`graph.json 加载失败: ${err.message}`);
             }),
-            d3.json("/kg_bdaatv/data/resource_map.json").then(data => {
+            d3.json(`${basePath}/data/resource_map.json`).then(data => {
+                console.log('resource_map.json 加载成功');
                 if (typeof data === 'string') {
                     try {
                         data = JSON.parse(data);
                     } catch (e) {
-                        console.error("JSON解析失败，可能是编码问题", e);
-                        throw new Error("资源数据格式错误");
+                        throw new Error(`resource_map.json 解析失败: ${e.message}`);
                     }
                 }
                 return data;
+            }).catch(err => {
+                console.error('resource_map.json 加载失败:', err);
+                throw new Error(`resource_map.json 加载失败: ${err.message}`);
             })
         ]).then(([graph, resources]) => {
-            // 确保所有文本字段都是字符串（处理可能的编码问题）
+            document.getElementById('loading').style.display = 'none';
+            
+            // 确保所有文本字段都是字符串
             graph.nodes.forEach(node => {
                 Object.keys(node).forEach(key => {
                     if (typeof node[key] !== 'string') {
                         node[key] = String(node[key]);
-                    } else {
-                        // 如果是字符串但可能被错误解码，尝试修复常见乱码
-                        if (/ /.test(node[key])) {
-                            node[key] = decodeURIComponent(escape(node[key]));
-                        }
                     }
                 });
             });
@@ -168,17 +186,19 @@
                 .attr("fill", d => getCategoryColor(d.category))
                 .on("click", showNodeInfo);
 
-            // 添加文本标签（使用继承的字体设置）
+            // 添加文本标签
             node.append("text")
                 .attr("dy", -15)
                 .text(d => d.name);
 
             // 更新函数
             simulation.on("tick", () => {
-                link.attr("x1", d => d.source.x)
+                link
+                    .attr("x1", d => d.source.x)
                     .attr("y1", d => d.source.y)
                     .attr("x2", d => d.target.x)
                     .attr("y2", d => d.target.y);
+                
                 node.attr("transform", d => `translate(${d.x},${d.y})`);
             });
 
@@ -196,7 +216,6 @@
                     ${d.description}
                 `);
 
-                // 设置查看资源按钮的点击事件
                 d3.select("#show-resources").on("click", function() {
                     showResourceWindow(d);
                 });
@@ -212,22 +231,14 @@
                 resourceList.selectAll("li").remove();
 
                 (resources[node.id] || []).forEach(res => {
+                    const fullPath = res.path.startsWith('http') ? 
+                        res.path : 
+                        `${basePath}/${res.path.replace(/^\//, '')}`;
+                    
                     resourceList.append("li")
-                        .html(`<a href="${res.path}" target="_blank">${res.title}</a>`);
+                        .html(`<a href="${fullPath}" target="_blank">${res.title}</a>`);
                 });
             }
-
-            // 关闭资源窗口
-            d3.select("#close-resource").on("click", function() {
-                d3.select("#overlay").style("display", "none");
-                d3.select("#resource-window").style("display", "none");
-            });
-
-            // 点击遮罩层关闭窗口
-            d3.select("#overlay").on("click", function() {
-                d3.select("#overlay").style("display", "none");
-                d3.select("#resource-window").style("display", "none");
-            });
 
             // 拖拽函数
             function drag(simulation) {
@@ -258,8 +269,25 @@
                 return colors[category] || colors["默认"];
             }
         }).catch(error => {
-            console.error("数据加载失败:", error);
-            alert(`数据加载失败: ${error.message}`);
+            console.error("初始化失败:", error);
+            document.getElementById('loading').innerHTML = `
+                <h3 style="color:#f44336">加载失败</h3>
+                <p>${error.message}</p>
+                <p>尝试访问: <a href="${basePath}/data/graph.json" target="_blank">${basePath}/data/graph.json</a></p>
+                <button onclick="location.reload()" style="padding:5px 10px;margin-top:10px;">重新加载</button>
+            `;
+        });
+
+        // 关闭资源窗口
+        d3.select("#close-resource").on("click", function() {
+            d3.select("#overlay").style("display", "none");
+            d3.select("#resource-window").style("display", "none");
+        });
+
+        // 点击遮罩层关闭窗口
+        d3.select("#overlay").on("click", function() {
+            d3.select("#overlay").style("display", "none");
+            d3.select("#resource-window").style("display", "none");
         });
     </script>
 </body>

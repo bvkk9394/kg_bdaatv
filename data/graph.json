@@ -6,9 +6,9 @@
       "category": "机器学习",
       "difficulty": "中级",
       "description": "通过标注数据训练模型",
-      "doc_path": "/kg_bdaatv/docs/supervised.md",
+      "doc_path": "docs/supervised.md",
       "video_url": "https://example.com/video1.mp4",
-      "quiz_path": "/kg_bdaatv/quiz/ml_001.pdf"
+      "quiz_path": "quiz/ml_001.pdf"
     },
     {
       "id": "ML-002",
@@ -16,9 +16,9 @@
       "category": "深度学习",
       "difficulty": "高级",
       "description": "模拟人脑结构的算法",
-      "doc_path": "/kg_bdaatv/docs/neural_network.md",
+      "doc_path": "docs/neural_network.md",
       "video_url": "https://example.com/video2.mp4",
-      "quiz_path": "/kg_bdaatv/quiz/nn_basic.pdf"
+      "quiz_path": "quiz/nn_basic.pdf"
     },
     {
       "id": "DL-001",
@@ -26,9 +26,9 @@
       "category": "深度学习",
       "difficulty": "高级",
       "description": "基于神经网络的机器学习方法",
-      "doc_path": "/kg_bdaatv/docs/deep_learning.md",
+      "doc_path": "docs/deep_learning.md",
       "video_url": "",
-      "quiz_path": "/kg_bdaatv/quiz/dl_intro.pdf"
+      "quiz_path": "quiz/dl_intro.pdf"
     }
   ],
   "links": [
