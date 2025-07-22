@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>知识图谱可视化</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* 优化字体回退链，确保跨平台兼容 */
+        body { 
+            font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans CN", system-ui, -apple-system, Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+        }
+        #container { display: flex; height: 100vh; }
+        #graph { flex: 3; border-right: 1px solid #ddd; }
+        #panel { flex: 1; padding: 15px; overflow-y: auto; }
+        .node { cursor: pointer; stroke: #fff; stroke-width: 1.5px; }
+        .link { stroke: #999; stroke-opacity: 0.6; }
+        .node text { 
+            font-size: 12px; 
+            pointer-events: none; 
+            font-family: inherit; /* 继承父级字体设置 */
+            text-rendering: optimizeLegibility; /* 优化文本渲染 */
+            -webkit-font-smoothing: antialiased;
+        }
+        .panel-item { margin-bottom: 15px; padding: 10px; background: #f5f5f5; }
+        #resource-window { 
+            position: fixed; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            width: 60%; 
+            height: 70%; 
+            background: white; 
+            border: 1px solid #ccc; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.3); 
+            z-index: 1000; 
+            display: none; 
+            padding: 20px; 
+            overflow-y: auto;
+        }
+        #resource-window h3 { margin-top: 0; }
+        #close-resource { 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            cursor: pointer; 
+            background: #f44336; 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            border-radius: 3px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <svg id="graph" width="100%" height="100%"></svg>
+        <div id="panel">
+            <h2>知识节点信息</h2>
+            <div id="node-info" class="panel-item" style="display: none;">
+                <h3 id="node-title"></h3>
+                <p id="node-desc"></p>
+                <button id="show-resources">查看学习资源</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 资源弹窗 -->
+    <div class="overlay" id="overlay"></div>
+    <div id="resource-window">
+        <button id="close-resource">× 关闭</button>
+        <h3 id="resource-title"></h3>
+        <ul id="resource-list"></ul>
+    </div>
+
+    <script>
+        // 配置参数
+        const config = {
+            nodeRadius: 10,
+            linkDistance: 100,
+            chargeStrength: -200
+        };
+
+        // 加载数据（确保JSON文件为UTF-8编码）
+        Promise.all([
+            d3.json("data/graph.json").then(data => {
+                // 强制处理编码问题（如果服务器未正确设置Content-Type）
+                if (typeof data === 'string') {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        console.error("JSON解析失败，可能是编码问题", e);
+                        throw new Error("数据格式错误");
+                    }
+                }
+                return data;
+            }),
+            d3.json("data/resource_map.json").then(data => {
+                if (typeof data === 'string') {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        console.error("JSON解析失败，可能是编码问题", e);
+                        throw new Error("资源数据格式错误");
+                    }
+                }
+                return data;
+            })
+        ]).then(([graph, resources]) => {
+            // 确保所有文本字段都是字符串（处理可能的编码问题）
+            graph.nodes.forEach(node => {
+                Object.keys(node).forEach(key => {
+                    if (typeof node[key] !== 'string') {
+                        node[key] = String(node[key]);
+                    } else {
+                        // 如果是字符串但可能被错误解码，尝试修复常见乱码
+                        if (/ /.test(node[key])) {
+                            node[key] = decodeURIComponent(escape(node[key]));
+                        }
+                    }
+                });
+            });
+
+            const svg = d3.select("#graph");
+            const width = svg.node().getBoundingClientRect().width;
+            const height = svg.node().getBoundingClientRect().height;
+
+            // 初始化力导向图
+            const simulation = d3.forceSimulation(graph.nodes)
+                .force("link", d3.forceLink(graph.links).id(d => d.id))
+                .force("charge", d3.forceManyBody().strength(config.chargeStrength))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            // 创建缩放容器
+            const g = svg.append("g");
+
+            // 绘制连线
+            const link = g.append("g")
+                .selectAll("line")
+                .data(graph.links)
+                .join("line")
+                .attr("class", "link")
+                .attr("stroke-width", d => Math.sqrt(d.weight || 1));
+
+            // 绘制节点组
+            const node = g.append("g")
+                .selectAll("g")
+                .data(graph.nodes)
+                .join("g")
+                .call(drag(simulation));
+
+            // 添加圆形
+            node.append("circle")
+                .attr("class", "node")
+                .attr("r", config.nodeRadius)
+                .attr("fill", d => getCategoryColor(d.category))
+                .on("click", showNodeInfo);
+
+            // 添加文本标签（使用继承的字体设置）
+            node.append("text")
+                .attr("dy", -15)
+                .text(d => d.name);
+
+            // 更新函数
+            simulation.on("tick", () => {
+                link.attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            // 当前选中的节点ID
+            let selectedNodeId = null;
+
+            // 显示节点信息
+            function showNodeInfo(event, d) {
+                selectedNodeId = d.id;
+                d3.select("#node-info").style("display", "block");
+                d3.select("#node-title").text(d.name);
+                d3.select("#node-desc").html(`
+                    <strong>分类:</strong> ${d.category}<br>
+                    <strong>难度:</strong> ${d.difficulty}<br>
+                    ${d.description}
+                `);
+
+                // 设置查看资源按钮的点击事件
+                d3.select("#show-resources").on("click", function() {
+                    showResourceWindow(d);
+                });
+            }
+
+            // 显示资源窗口
+            function showResourceWindow(node) {
+                d3.select("#overlay").style("display", "block");
+                d3.select("#resource-window").style("display", "block");
+                d3.select("#resource-title").text(`${node.name} - 学习资源`);
+
+                const resourceList = d3.select("#resource-list");
+                resourceList.selectAll("li").remove();
+
+                (resources[node.id] || []).forEach(res => {
+                    resourceList.append("li")
+                        .html(`<a href="${res.path}" target="_blank">${res.title}</a>`);
+                });
+            }
+
+            // 关闭资源窗口
+            d3.select("#close-resource").on("click", function() {
+                d3.select("#overlay").style("display", "none");
+                d3.select("#resource-window").style("display", "none");
+            });
+
+            // 点击遮罩层关闭窗口
+            d3.select("#overlay").on("click", function() {
+                d3.select("#overlay").style("display", "none");
+                d3.select("#resource-window").style("display", "none");
+            });
+
+            // 拖拽函数
+            function drag(simulation) {
+                return d3.drag()
+                    .on("start", (event, d) => {
+                        if (!event.active) simulation.alphaTarget(0.3).restart();
+                        d.fx = d.x;
+                        d.fy = d.y;
+                    })
+                    .on("drag", (event, d) => {
+                        d.fx = event.x;
+                        d.fy = event.y;
+                    })
+                    .on("end", (event, d) => {
+                        if (!event.active) simulation.alphaTarget(0);
+                        d.fx = null;
+                        d.fy = null;
+                    });
+            }
+
+            // 分类颜色映射
+            function getCategoryColor(category) {
+                const colors = {
+                    "机器学习": "#4CAF50",
+                    "深度学习": "#2196F3",
+                    "默认": "#9E9E9E"
+                };
+                return colors[category] || colors["默认"];
+            }
+        }).catch(error => {
+            console.error("数据加载失败:", error);
+            alert(`数据加载失败: ${error.message}`);
+        });
+    </script>
+</body>
+</html>
