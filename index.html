@@ -95,7 +95,7 @@
 
         // 加载数据（确保JSON文件为UTF-8编码）
         Promise.all([
-            d3.json("/kg_bvaatv/data/graph.json").then(data => {
+            d3.json("/kg_bdaatv/data/graph.json").then(data => {
                 // 强制处理编码问题（如果服务器未正确设置Content-Type）
                 if (typeof data === 'string') {
                     try {
@@ -107,7 +107,7 @@
                 }
                 return data;
             }),
-            d3.json("/kg_bvaatv/data/resource_map.json").then(data => {
+            d3.json("/kg_bdaatv/data/resource_map.json").then(data => {
                 if (typeof data === 'string') {
                     try {
                         data = JSON.parse(data);
